@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Extensions;
+using UmbracoDiscord.Core.Services;
 
 namespace UmbracoDiscord
 {
@@ -46,6 +47,8 @@ namespace UmbracoDiscord
                 .AddComposers()
                 .Build();
 #pragma warning restore IDE0022 // Use expression body for methods
+
+            services.AddScoped<IDiscordAuthService, DiscordAuthService>();
 
         }
 

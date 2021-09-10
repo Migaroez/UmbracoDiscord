@@ -1,0 +1,22 @@
+﻿@using Umbraco.Cms.Web.Common.PublishedModels;
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.Homepage>
+@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
+@using Umbraco.Cms.Core.Security
+@using Umbraco.Cms.Core.Media.EmbedProviders
+@inject IMemberManager MemberManager
+@{
+    Layout = null;
+}
+
+<div>
+    @if (MemberManager.IsLoggedIn())
+    {
+        <span>Member is logged in => todo display name</span>
+    }
+    else
+    {
+        var discordLoginPage = Model.FirstChild<DiscordSection>().FirstChild<DiscordLogin>();
+        <a href="@discordLoginPage.Url()">Login to discord</a>
+    }
+
+</div>

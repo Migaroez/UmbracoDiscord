@@ -1,0 +1,8 @@
+﻿@using Umbraco.Cms.Web.Common.PublishedModels;
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.DiscordLoginRedirectHandler>
+@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
+@{
+	Layout = null;
+}
+
+<div> Oops something went wrong, contact us if this keeps happening, <a href="@(Model.Ancestor<DiscordSection>().FirstChild<DiscordLogin>().Url())">click here to try again.</a></div>
