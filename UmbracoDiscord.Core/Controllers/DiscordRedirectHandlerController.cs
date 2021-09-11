@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.Extensions.Logging;
+using Umbraco.Cms.Core.Security;
 using Umbraco.Cms.Core.Web;
 using Umbraco.Cms.Web.Common.Controllers;
 using Umbraco.Cms.Web.Common.PublishedModels;
+using Umbraco.Cms.Web.Common.Security;
 using Umbraco.Extensions;
 using UmbracoDiscord.Core.Services;
 
@@ -18,12 +20,18 @@ namespace UmbracoDiscord.Core.Controllers
     {
         private readonly ILogger<DiscordLoginRedirectHandlerController> _logger;
         private readonly IDiscordAuthService _discordAuthService;
+        private readonly IMemberManager _memberManager;
+        private readonly IMemberSignInManager _memberSignInManager;
 
         public DiscordLoginRedirectHandlerController(ILogger<DiscordLoginRedirectHandlerController> logger, ICompositeViewEngine compositeViewEngine, IUmbracoContextAccessor umbracoContextAccessor,
-            IDiscordAuthService discordAuthService) : base(logger, compositeViewEngine, umbracoContextAccessor)
+            IDiscordAuthService discordAuthService,
+            IMemberManager memberManager,
+            IMemberSignInManager memberSignInManager) : base(logger, compositeViewEngine, umbracoContextAccessor)
         {
             _logger = logger;
             _discordAuthService = discordAuthService;
+            _memberManager = memberManager;
+            _memberSignInManager = memberSignInManager;
         }
 
         //todo figure out why override doesnt work with async
@@ -35,11 +43,16 @@ namespace UmbracoDiscord.Core.Controllers
                 return base.Index();
             }
 
-            if (_discordAuthService.HandleRedirect(HttpContext,CurrentPage.Ancestor<DiscordSection>()).GetAwaiter().GetResult() == false)
+            var handleRedirectResult = _discordAuthService
+                .HandleRedirect(HttpContext, CurrentPage.Ancestor<DiscordSection>()).GetAwaiter().GetResult();
+            if (handleRedirectResult.Success == false)
             {
-                _logger.LogInformation("DiscordAuthService failed to handle redirect");
+                _logger.LogError(handleRedirectResult.Exception, "DiscordAuthService failed to handle redirect");
                 return base.Index();
             }
+
+            var memberIdentity = _memberManager.FindByEmailAsync(handleRedirectResult.Result).GetAwaiter().GetResult();
+            _memberSignInManager.SignInAsync(memberIdentity, true, "discord");
 
             return base.Redirect(CurrentPage.AncestorOrSelf(1).Url());
         }

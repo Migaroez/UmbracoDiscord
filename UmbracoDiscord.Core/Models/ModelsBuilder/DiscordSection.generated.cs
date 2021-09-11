@@ -64,5 +64,13 @@ namespace Umbraco.Cms.Web.Common.PublishedModels
 		[global::System.Diagnostics.CodeAnalysis.MaybeNull]
 		[ImplementPropertyType("clientSecret")]
 		public virtual string ClientSecret => this.Value<string>(_publishedValueFallback, "clientSecret");
+
+		///<summary>
+		/// RequiredGuildIds: csv of guilds(servers) the discord user should be a member off If empty, we do not check if a member is part of the guild. If enabled, will deapprove the member if they leave the server
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-rc002+dba385e5e52ee5a0dafd48f687e8d8254b3a633a")]
+		[global::System.Diagnostics.CodeAnalysis.MaybeNull]
+		[ImplementPropertyType("requiredGuildIds")]
+		public virtual string RequiredGuildIds => this.Value<string>(_publishedValueFallback, "requiredGuildIds");
 	}
 }

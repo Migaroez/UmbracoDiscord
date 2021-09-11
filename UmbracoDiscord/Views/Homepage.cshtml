@@ -11,7 +11,7 @@
 <div>
     @if (MemberManager.IsLoggedIn())
     {
-        <span>Member is logged in => todo display name</span>
+        <span>Logged in as @MemberManager.GetCurrentMemberAsync().GetAwaiter().GetResult().Name</span>
     }
     else
     {
