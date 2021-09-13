@@ -7,32 +7,41 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Serilog.Core;
 using Flurl.Http;
+using Microsoft.Extensions.Configuration;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Scoping;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Web.Common.PublishedModels;
+using Umbraco.Cms.Web.Common.Security;
 using Umbraco.Extensions;
+using UmbracoDiscord.Core.Models.DiscordApi;
+using UmbracoDiscord.Core.Repositories;
 using UmbracoDiscord.Core.Services.Exceptions;
-using UmbracoDiscord.Core.Services.Models;
 
 namespace UmbracoDiscord.Core.Services
 {
     public class DiscordAuthService : IDiscordAuthService
     {
-        private const string TokenEndpoint = "https://discord.com/api/v8/oauth2/token";
-        private const string UserEndpoint = "https://discord.com/api/v8/users/@me";
-        private const string GuildEndpoint = "https://discord.com/api/v8/users/@me/guilds";
-
         private readonly ILogger<DiscordAuthService> _logger;
         private readonly IMemberService _memberService;
+        private readonly DiscordRoleRepository _discordRoleRepository;
+        private readonly IConfiguration _configuration;
+        private readonly IScopeProvider _scopeProvider;
         private static Dictionary<string, Guid> _stateTracker = new(); // todo change this to a repository
 
         public DiscordAuthService(ILogger<DiscordAuthService> logger,
-            IMemberService memberService)
+            IMemberService memberService,
+            DiscordRoleRepository discordRoleRepository,
+            IConfiguration configuration,
+            IScopeProvider scopeProvider)
         {
             _logger = logger;
             _memberService = memberService;
+            _discordRoleRepository = discordRoleRepository;
+            _configuration = configuration;
+            _scopeProvider = scopeProvider;
         }
 
         #region State
@@ -79,7 +88,7 @@ namespace UmbracoDiscord.Core.Services
         public async Task<Attempt<string>> HandleRedirect(HttpContext httpContext, DiscordSection settings)
         {
             // get bearer token from redirect code
-            var bearerTokenResult = await ExchangeRedirectCode((string)httpContext.Request.Query["code"],settings);
+            var bearerTokenResult = await ExchangeRedirectCode((string)httpContext.Request.Query["code"], settings);
 
             // get user
             var userResult = await GetUser(bearerTokenResult.AccessToken);
@@ -95,12 +104,12 @@ namespace UmbracoDiscord.Core.Services
             var existingMember = _memberService.GetByEmail(userResult.Email);
             if (existingMember != null)
             {
-                var updateMemberResult = UpdateMember(existingMember, userResult, guildResult, settings);
+                var updateMemberResult = await UpdateMember(existingMember, userResult, guildResult, settings).ConfigureAwait(false);
                 if (updateMemberResult.Success == false)
                 {
                     return Attempt<string>.Fail(updateMemberResult.Exception);
                 }
-                return Attempt<string>.Succeed(userResult.Username);
+                return Attempt<string>.Succeed(userResult.Email);
             }
 
             // if no member exists, create member and log them in
@@ -117,7 +126,7 @@ namespace UmbracoDiscord.Core.Services
 
         private async Task<BearerTokenResult> ExchangeRedirectCode(string code, DiscordSection settings)
         {
-            return await TokenEndpoint.PostUrlEncodedAsync(new
+            return await Constants.DiscordApi.TokenEndpoint.PostUrlEncodedAsync(new
             {
                 client_id = settings.ClientId,
                 client_secret = settings.ClientSecret,
@@ -129,18 +138,18 @@ namespace UmbracoDiscord.Core.Services
 
         private async Task<UserResult> GetUser(string accessToken)
         {
-            return await UserEndpoint.WithOAuthBearerToken(accessToken)
+            return await Constants.DiscordApi.UserEndpoint.WithOAuthBearerToken(accessToken)
                 .GetAsync().ReceiveJson<UserResult>().ConfigureAwait(false);
         }
 
         private async Task<List<GuildResult>> GetGuilds(string accessToken)
         {
-            return await GuildEndpoint.
+            return await Constants.DiscordApi.GuildEndpoint.
                 WithOAuthBearerToken(accessToken)
                 .GetAsync().ReceiveJson<List<GuildResult>>().ConfigureAwait(false);
         }
 
-        private Attempt<bool> UpdateMember(IMember member, UserResult userResult, List<GuildResult> guilds, DiscordSection settings)
+        private async Task<Attempt<bool>> UpdateMember(IMember member, UserResult userResult, List<GuildResult> guilds, DiscordSection settings)
         {
             if (RequiredGuildsValidated(userResult, guilds, settings) == false)
             {
@@ -148,9 +157,61 @@ namespace UmbracoDiscord.Core.Services
                 _memberService.Save(member);
                 return Attempt<bool>.Fail(new FailedRequiredGuildsException());
             }
+            UpdateUserDetails(member, userResult);
             _memberService.Save(member);
+            await SyncMemberGroups(member, userResult, guilds);
             return Attempt<bool>.Succeed();
+        }
+
+        private async Task SyncMemberGroups(IMember member, UserResult userResult, List<GuildResult> guilds)
+        {
+            using var scope = _scopeProvider.CreateScope(autoComplete: true);
+
+            var syncRules = _discordRoleRepository.GetAll();
+            // we are not in the guild of the rule OR the rule has been marked as syncRemove
+            var groupsToRemove = syncRules.Where(r => guilds.Any(g => g.Id == r.GuildId) == false || r.SyncRemoval)
+                .Select(r => r.MembershipGroupAlias).Distinct().ToList();
             
+            var activeGuilds = syncRules.Where(r => r.SyncRemoval == false).Select(r => r.GuildId).Distinct();
+
+            var groupsToAdd = new List<string>();
+            foreach (var guildId in activeGuilds)
+            {
+                var guildMember = await string.Format(Constants.DiscordApi.GuildPermissionsEndpoint,guildId,userResult.Id)
+                    .WithHeader("Authorization", "Bot " + _configuration["Discord:Token"])
+                    .GetAsync().ReceiveJson<GuildUserResult>().ConfigureAwait(false);
+                var validGroups = syncRules
+                    .Where(s => s.SyncRemoval == false && s.GuildId == guildId &&
+                                guildMember.Roles.Any(r => r == s.RoleId)).Select(s => s.MembershipGroupAlias)
+                    .Distinct();
+                foreach (var validGroup in validGroups)
+                {
+                    if (groupsToAdd.Contains(validGroup) == false)
+                    {
+                        groupsToAdd.Add(validGroup);
+                    }
+                }
+            }
+
+            // no need to delete rolls we are going to add
+            foreach (var role in groupsToAdd)
+            {
+                if (groupsToRemove.Contains(role))
+                {
+                    groupsToRemove.Remove(role);
+                }
+            }
+
+            if (groupsToRemove.Any())
+            {
+                _memberService.DissociateRoles(new[] { member.Id }, groupsToRemove.ToArray());
+            }
+
+            if (groupsToAdd.Any())
+            {
+                _memberService.AssignRoles(new[]{member.Id},groupsToAdd.ToArray());
+            }
+
         }
 
         private Attempt<bool> CreateMember(UserResult userResult, List<GuildResult> guilds, DiscordSection settings)
@@ -161,17 +222,17 @@ namespace UmbracoDiscord.Core.Services
             }
 
             var newMember = _memberService.CreateMember(userResult.Email, userResult.Email, userResult.Username, "member");
-            UpdateUserDetails(newMember,userResult);
-            
+            UpdateUserDetails(newMember, userResult);
+
             _memberService.Save(newMember);
             return Attempt<bool>.Succeed();
         }
 
         private void UpdateUserDetails(IMember member, UserResult userResult)
         {
-            member.AdditionalData["discordId"] = userResult.Id;
-            member.AdditionalData["discordUserName"] = userResult.Username;
-            member.AdditionalData["discordDiscriminator"] = userResult.Discriminator;
+            member.SetValue("discordId", userResult.Id);
+            member.SetValue("discordUserName", userResult.Username);
+            member.SetValue("discordDiscriminator", userResult.Discriminator);
         }
 
         private bool RequiredGuildsValidated(UserResult userResult, List<GuildResult> guilds, DiscordSection section)
@@ -183,7 +244,7 @@ namespace UmbracoDiscord.Core.Services
 
             var requiredGuildStrings = section.RequiredGuildIds.Split(",");
             requiredGuildStrings.RemoveAll(i => i.IsNullOrWhiteSpace());
-            var requiredGuildIds = requiredGuildStrings.Select(id => Convert.ToInt64(id));
+            var requiredGuildIds = requiredGuildStrings.Select(id => Convert.ToUInt64(id));
 
             if (requiredGuildStrings.Any() == false)
             {

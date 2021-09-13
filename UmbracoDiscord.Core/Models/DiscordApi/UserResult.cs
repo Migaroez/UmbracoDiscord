@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace UmbracoDiscord.Core.Services.Models
+namespace UmbracoDiscord.Core.Models.DiscordApi
 {
     public class UserResult
     {
@@ -17,7 +17,7 @@ namespace UmbracoDiscord.Core.Services.Models
         public int Flags { get; set; }
 
         [JsonProperty("id")]
-        public string Id { get; set; }
+        public decimal Id { get; set; }
 
         [JsonProperty("locale")]
         public string Locale { get; set; }

@@ -34,7 +34,7 @@ namespace UmbracoDiscord.Core.Controllers
             _memberSignInManager = memberSignInManager;
         }
 
-        //todo figure out why override doesnt work with async
+        //todo figure out why override doesn't work with async
         public override IActionResult Index()
         {
             if (_discordAuthService.IsValidState(HttpContext) == false)

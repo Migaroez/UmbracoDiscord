@@ -11,7 +11,12 @@
 <div>
     @if (MemberManager.IsLoggedIn())
     {
+        var logoutPage = Model.FirstChild<Logout>();
         <span>Logged in as @MemberManager.GetCurrentMemberAsync().GetAwaiter().GetResult().Name</span>
+        if (logoutPage != null)
+        {
+            <a href="@logoutPage.Url()"> (Logout)</a>
+        }
     }
     else
     {

@@ -1,11 +1,11 @@
 ﻿using Newtonsoft.Json;
 
-namespace UmbracoDiscord.Core.Services.Models
+namespace UmbracoDiscord.Core.Models.DiscordApi
 {
     public class GuildResult
     {
         [JsonProperty("id")]
-        public long Id { get; set; }
+        public decimal Id { get; set; }
 
         [JsonProperty("name")]
         public string Name { get; set; }

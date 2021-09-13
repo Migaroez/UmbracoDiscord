@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31624.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoDiscord", "UmbracoDiscord\UmbracoDiscord.csproj", "{0EC94807-2BC2-443B-BC76-8250C1949D9A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UmbracoDiscord", "UmbracoDiscord\UmbracoDiscord.csproj", "{0EC94807-2BC2-443B-BC76-8250C1949D9A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoDiscord.Core", "UmbracoDiscord.Core\UmbracoDiscord.Core.csproj", "{8C62EC4C-1A6F-4B7F-AA24-DBD177214171}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UmbracoDiscord.Core", "UmbracoDiscord.Core\UmbracoDiscord.Core.csproj", "{8C62EC4C-1A6F-4B7F-AA24-DBD177214171}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

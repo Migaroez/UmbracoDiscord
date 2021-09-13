@@ -1,0 +1,88 @@
+﻿﻿<div ng-controller="Discord.Dashboard as vm">
+    <umb-box>
+        <umb-box-header title="Available guilds">
+            <umb-button action="vm.getGuilds()"
+                        label="Refresh"
+                        type="button"
+                        button-style="info">
+            </umb-button>
+        </umb-box-header>
+        <umb-box-content>
+            <div ng-repeat="guild in vm.guilds"
+                 class="discordDashboardItem"
+                 ng-class="{selected : vm.selectedGuild === guild}"
+                 ng-click="vm.selectGuild(guild)">
+                {{guild.name}}
+            </div>
+        </umb-box-content>
+    </umb-box>
+
+    <umb-box ng-if="vm.selectedGuild != null">
+        <umb-box-header title="Available roles">
+            <umb-button action="vm.getRoles()"
+                        label="Refresh"
+                        type="button"
+                        button-style="info">
+            </umb-button>
+        </umb-box-header>
+        <umb-box-content>
+            <div ng-repeat="role in vm.roles"
+                 class="discordDashboardItem"
+                 ng-class="{selected : vm.selectedRole === role}"
+                 ng-click="vm.selectRole(role)">
+                {{role.name}}
+            </div>
+        </umb-box-content>
+    </umb-box>
+
+    <umb-box ng-if="vm.selectedRole != null && vm.addingNewSync === false">
+        <umb-box-header title="Assigned membership groups">
+            <umb-button action="vm.startAddNewSync()"
+                        label="New"
+                        type="button"
+                        button-style="success">
+            </umb-button>
+            <umb-button action="vm.getSyncGroups()"
+                        label="Refresh"
+                        type="button"
+                        button-style="info">
+            </umb-button>
+        </umb-box-header>
+        <umb-box-content>
+            <div ng-repeat="group in vm.syncedGroups"
+                 class="discordDashboardItem"
+                 ng-class="{selected : vm.selectedsyncGroup === group}">
+                {{group.membershipGroupAlias}}
+            </div>
+        </umb-box-content>
+    </umb-box>
+
+    <umb-box ng-if="vm.addingNewSync === true">
+        <umb-box-header title="Add new synced membership group">
+        </umb-box-header>
+        <umb-box-content>
+            <div ng-repeat="group in vm.groups"
+                 class="discordDashboardItem"
+                 ng-class="{selected : vm.selectedGroup === group}"
+                 ng-click="vm.selectGroup(group)">
+                {{group}}
+            </div>
+            <hr>
+            <umb-button ng-if="vm.selectedGroup != null"
+                        action="vm.addSync()"
+                        label="Save"
+                        type="button"
+                        button-style="success">
+            </umb-button>
+        </umb-box-content>
+    </umb-box>
+</div>
+
+ <style>
+     .discordDashboardItem {
+         padding: 3px;
+     }
+     .selected {
+         background-color: rgb(254,228,225);
+     }
+ </style>

@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace UmbracoDiscord.Core.Services.Models
+namespace UmbracoDiscord.Core.Models.DiscordApi
 {
     public class BearerTokenResult
     {
