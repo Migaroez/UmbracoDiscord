@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.PublishedContent;
@@ -21,11 +22,13 @@ namespace UmbracoDiscord.Core.Controllers
     public class DiscordLoginController : RenderController
     {
         private readonly IDiscordAuthService _discordAuthService;
+        private readonly IConfiguration _configuration;
 
         public DiscordLoginController(ILogger<DiscordLoginController> logger, ICompositeViewEngine compositeViewEngine, IUmbracoContextAccessor umbracoContextAccessor,
-            IDiscordAuthService discordAuthService) : base(logger, compositeViewEngine, umbracoContextAccessor)
+            IDiscordAuthService discordAuthService, IConfiguration configuration) : base(logger, compositeViewEngine, umbracoContextAccessor)
         {
             _discordAuthService = discordAuthService;
+            _configuration = configuration;
         }
 
         public override IActionResult Index()
@@ -37,7 +40,7 @@ namespace UmbracoDiscord.Core.Controllers
                 return base.Index();
             }
 
-            if (settings.ClientId.IsNullOrWhiteSpace() || settings.ClientId.IsNullOrWhiteSpace())
+            if (_configuration["Discord:ClientId"].IsNullOrWhiteSpace() || _configuration["Discord:ClientSecret"].IsNullOrWhiteSpace())
             {
                 return base.Index();
             }
@@ -51,7 +54,7 @@ namespace UmbracoDiscord.Core.Controllers
 
 
             return Redirect(
-                $"{DiscordApi.AuthorizeEndpoint}?response_type=code&client_id={settings.ClientId}&scope=identify%20email%20guilds&state={state}&redirect_uri={redirectPage.Url(mode:UrlMode.Absolute)}&prompt=none");
+                $"{DiscordApi.AuthorizeEndpoint}?response_type=code&client_id={_configuration["Discord:ClientId"]}&scope=identify%20email%20guilds&state={state}&redirect_uri={redirectPage.Url(mode:UrlMode.Absolute)}&prompt=none");
         }
     }
 }

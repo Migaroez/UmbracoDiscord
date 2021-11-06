@@ -26,7 +26,7 @@ namespace UmbracoDiscord.Core.Services
         private readonly DiscordRoleRepository _discordRoleRepository;
         private readonly IConfiguration _configuration;
         private readonly IScopeProvider _scopeProvider;
-        private static Dictionary<string, Guid> _stateTracker = new(); // todo change this to a repository
+        private static Dictionary<string, Guid> _stateTracker = new(); // todo change this to a repository so it survives app recycles
 
         public DiscordAuthService(ILogger<DiscordAuthService> logger,
             IMemberService memberService,
@@ -123,13 +123,13 @@ namespace UmbracoDiscord.Core.Services
 
         public async Task<List<GuildResult>> GetAvailableGuilds()
         {
-            return await Constants.DiscordApi.GuildEndpoint.WithHeader("Authorization", "Bot " + _configuration["Discord:Token"])
+            return await Constants.DiscordApi.GuildEndpoint.WithHeader("Authorization", "Bot " + _configuration["Discord:BotToken"])
                 .GetAsync().ReceiveJson<List<GuildResult>>().ConfigureAwait(false);
         }
 
         public async Task<List<GuildResult>> GetAvailableRolesForGuild(ulong guildId)
         {
-            return await string.Format(Constants.DiscordApi.GuildRolesEndpoint, guildId).WithHeader("Authorization", "Bot " + _configuration["Discord:Token"])
+            return await string.Format(Constants.DiscordApi.GuildRolesEndpoint, guildId).WithHeader("Authorization", "Bot " + _configuration["Discord:BotToken"])
                 .GetAsync().ReceiveJson<List<GuildResult>>().ConfigureAwait(false);
         }
 
@@ -137,8 +137,8 @@ namespace UmbracoDiscord.Core.Services
         {
             return await Constants.DiscordApi.TokenEndpoint.PostUrlEncodedAsync(new
             {
-                client_id = settings.ClientId,
-                client_secret = settings.ClientSecret,
+                client_id = _configuration["Discord:ClientId"],
+                client_secret = _configuration["Discord:ClientSecret"],
                 grant_type = "authorization_code",
                 code = code,
                 redirect_uri = settings.FirstChild<DiscordLoginRedirectHandler>().Url(mode: UrlMode.Absolute)
@@ -190,7 +190,7 @@ namespace UmbracoDiscord.Core.Services
             foreach (var guildId in activeGuilds)
             {
                 var guildMember = await string.Format(Constants.DiscordApi.GuildPermissionsEndpoint,guildId,userResult.Id)
-                    .WithHeader("Authorization", "Bot " + _configuration["Discord:Token"])
+                    .WithHeader("Authorization", "Bot " + _configuration["Discord:BotToken"])
                     .GetAsync().ReceiveJson<GuildUserResult>().ConfigureAwait(false);
                 var validGroups = syncRules
                     .Where(s => s.SyncRemoval == false && s.GuildId == guildId &&

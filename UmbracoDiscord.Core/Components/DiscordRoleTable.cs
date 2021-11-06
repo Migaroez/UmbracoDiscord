@@ -13,7 +13,7 @@ using UmbracoDiscord.Core.Repositories.Dtos;
 
 namespace UmbracoDiscord.Core.Components
 {
-    public class DiscordRoleComposer : IUserComposer
+    public class DiscordRoleComposer : IComposer
     {
         public void Compose(IUmbracoBuilder builder)
         {

@@ -15,7 +15,7 @@ namespace UmbracoDiscord.Core.Components
         public string Name => "Discord";
     }
 
-    public class SectionComposer : IUserComposer
+    public class SectionComposer : IComposer
     {
         public void Compose(IUmbracoBuilder builder)
         {
