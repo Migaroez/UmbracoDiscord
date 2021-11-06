@@ -1,4 +1,9 @@
-﻿using Flurl.Http;
+﻿//todo: The state tracking is currently based on the IP address passed in the request object
+// it is unlikely but not impossible that 2 requests for the same IP will happen around the same time
+// when this happens, the first request might get invalidated because the LoginController requests a refresh
+//todo: move state tracking into its own class
+
+using Flurl.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -97,7 +102,7 @@ namespace UmbracoDiscord.Core.Services
             // get guilds and check they are still a member of the guild specified
             var guildResult = await GetGuilds(bearerTokenResult.AccessToken);
 
-            // if userId exists on any member, update member and log them in
+            // if userId exists update them
             var existingMember = _memberService.GetByEmail(userResult.Email);
             if (existingMember != null)
             {
@@ -109,16 +114,13 @@ namespace UmbracoDiscord.Core.Services
                 return Attempt<string>.Succeed(userResult.Email);
             }
 
-            // if no member exists, create member and log them in
+            // if no member exists create them
             var newMemberResult = CreateMember(userResult, guildResult, settings);
             if (newMemberResult.Success == false)
             {
                 return Attempt<string>.Fail(newMemberResult.Exception);
             }
             return Attempt<string>.Succeed(userResult.Email);
-
-            // contact the authbot and update member permissions based on roles
-
         }
 
         public async Task<List<GuildResult>> GetAvailableGuilds()
@@ -178,12 +180,12 @@ namespace UmbracoDiscord.Core.Services
 
             var availableGuilds = await GetAvailableGuilds();
 
-            var syncRules = _discordRoleRepository.GetAll();
+            var syncRules = _discordRoleRepository.GetAll().ToList();
             // we are not in the guild of the rule OR we no longer have access to the guild OR the rule has been marked as syncRemove
             var groupsToRemove = syncRules.Where(r => guilds.Any(g => g.Id == r.GuildId) == false || availableGuilds.Any(g => g.Id == r.GuildId) || r.SyncRemoval)
                 .Select(r => r.MembershipGroupAlias).Distinct().ToList();
 
-            // we need to filter out unavailable guilds else fetching the members in 
+            // we need to filter out unavailable guilds else fetching the discord information in the loop below will throw an error
             var activeGuilds = syncRules.Where(r => r.SyncRemoval == false && availableGuilds.Any(g => g.Id == r.GuildId)).Select(r => r.GuildId).Distinct();
 
             var groupsToAdd = new List<string>();

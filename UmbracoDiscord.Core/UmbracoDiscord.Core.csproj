@@ -9,8 +9,4 @@
     <PackageReference Include="Umbraco.Cms.Web.Common" Version="9.0.0-rc003" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\SubmitModels\" />
-  </ItemGroup>
-
 </Project>

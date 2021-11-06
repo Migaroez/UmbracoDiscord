@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace UmbracoDiscord.Core.Services.Exceptions
 {
-    public class EmailUnverifiedException : Exception
+    public class FailedRequiredGuildsException : Exception
     {
     }
 }

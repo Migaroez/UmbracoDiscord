@@ -19,6 +19,7 @@ using Umbraco.Cms.Web.Common.Attributes;
 using Umbraco.Cms.Web.Common.Authorization;
 using Umbraco.Cms.Web.Common.Controllers;
 using UmbracoDiscord.Core.Components;
+using UmbracoDiscord.Core.Controllers.SubmitModels;
 using UmbracoDiscord.Core.Models.DiscordApi;
 using UmbracoDiscord.Core.Models.DiscordDashboard;
 using UmbracoDiscord.Core.Repositories;
