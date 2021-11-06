@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Umbraco.Cms.Core.Dashboards;
+﻿using Umbraco.Cms.Core.Dashboards;
 
 namespace UmbracoDiscord.Core.Components
 {

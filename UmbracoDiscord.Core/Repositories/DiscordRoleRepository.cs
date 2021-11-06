@@ -1,6 +1,4 @@
-﻿using System;
-using Umbraco.Cms.Core.Logging;
-using Umbraco.Cms.Core.Persistence;
+﻿using Umbraco.Cms.Core.Logging;
 using Umbraco.Cms.Core.Scoping;
 using UmbracoDiscord.Core.Repositories.Dtos;
 
