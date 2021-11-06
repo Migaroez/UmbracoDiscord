@@ -1,6 +1,7 @@
 ﻿angular.module("umbraco")
     .controller("Discord.Dashboard", function ($scope, $http) {
 
+        /* Data definitions */
         var baseApiUrl = "/umbraco/backoffice/api/discordadmin/";
         var vm = this;
         vm.guilds = [];
@@ -17,6 +18,7 @@
 
         vm.addingNewSync = false;
 
+        /* Public get functions */
         vm.getGuilds = function () {
             resetSelectedGuild();
             $http.get(baseApiUrl + "Guilds").then((response) => {
@@ -50,12 +52,7 @@
             });
         }
 
-        vm.startAddNewSync = function () {
-            resetSelectedGroup();
-            vm.getGetGroups();
-            vm.addingNewSync = true;
-        }
-
+        /* Public select functions */
         vm.selectGuild = function (guild) {
             vm.selectedGuild = guild;
             vm.getRoles();
@@ -75,14 +72,15 @@
             console.log(vm.selectedSyncGroup);
         }
 
-        vm.addSync = function() {
-            $http.post(baseApiUrl + "RegisterRoleToMemberGroup", { guildId: vm.selectedGuild.id, roleId: vm.selectedRole.id, membershipGroupAlias:vm.selectedGroup}).then((response) => {
-                vm.getSyncGroups();
-            });
+        /* Public actions */
+        vm.startAddNewSync = function () {
+            resetSelectedGroup();
+            vm.getGetGroups();
+            vm.addingNewSync = true;
         }
 
-        vm.removeSync = function (syncRemoval) {
-            $http.post(baseApiUrl + "RemoveMemberGroupFromRole", { id: vm.selectedSyncGroup.id, syncRemoval: syncRemoval }).then((response) => {
+        vm.addSync = function() {
+            $http.post(baseApiUrl + "RegisterRoleToMemberGroup", { guildId: vm.selectedGuild.id, roleId: vm.selectedRole.id, membershipGroupAlias:vm.selectedGroup}).then((response) => {
                 vm.getSyncGroups();
             });
         }
@@ -91,6 +89,14 @@
             vm.selectedGroup = false;
             vm.addingNewSync = false;
         }
+
+        vm.removeSync = function (syncRemoval) {
+            $http.post(baseApiUrl + "RemoveMemberGroupFromRole", { id: vm.selectedSyncGroup.id, syncRemoval: syncRemoval }).then((response) => {
+                vm.getSyncGroups();
+            });
+        }
+
+        
 
 
         //private functions
@@ -121,8 +127,6 @@
         function resetSelectedGroup() {
             vm.selectedGroup = null;
         }
-
-        
 
         //init
         vm.getGuilds();
