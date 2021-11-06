@@ -37,6 +37,18 @@
 
     <umb-box ng-if="vm.selectedRole != null && vm.addingNewSync === false">
         <umb-box-header title="Assigned membership groups">
+            <umb-button ng-if="vm.selectedSyncGroup != null"
+                        action="vm.removeSync(true)"
+                        label="Disable"
+                        type="button"
+                        button-style="warning">
+            </umb-button>
+            <umb-button ng-if="vm.selectedSyncGroup != null"
+                        action="vm.removeSync(false)"
+                        label="Remove"
+                        type="button"
+                        button-style="danger">
+            </umb-button>
             <umb-button action="vm.startAddNewSync()"
                         label="New"
                         type="button"
@@ -51,7 +63,8 @@
         <umb-box-content>
             <div ng-repeat="group in vm.syncedGroups"
                  class="discordDashboardItem"
-                 ng-class="{selected : vm.selectedsyncGroup === group}">
+                 ng-class="{selected : vm.selectedSyncGroup === group, strike: group.syncRemoval}"
+                 ng-click="vm.selectSyncedGroup(group)">
                 {{group.membershipGroupAlias}}
             </div>
         </umb-box-content>
@@ -71,6 +84,11 @@
             <umb-button ng-if="vm.selectedGroup != null"
                         action="vm.addSync()"
                         label="Save"
+                        type="button"
+                        button-style="success">
+            </umb-button>
+            <umb-button action="vm.cancelAddSync()"
+                        label="Cancel"
                         type="button"
                         button-style="success">
             </umb-button>

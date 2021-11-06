@@ -142,18 +142,19 @@ namespace UmbracoDiscord.Core.Controllers
         }
 
         [HttpPost]
-        public bool RemoveMemberGroupFromRole(int id, bool syncRemoval)
+        public bool RemoveMemberGroupFromRole(RemoveSyncModel model)
         {
             using var scope = _scopeProvider.CreateScope();
-            var existing = _discordRoleRepository.Get(id);
+            var existing = _discordRoleRepository.Get(model.Id);
             if (existing == null)
             {
                 return false;
             }
 
-            if (syncRemoval)
+            if (model.SyncRemoval)
             {
                 existing.SyncRemoval = true;
+                _discordRoleRepository.Save(existing);
             }
             else
             {
@@ -163,7 +164,5 @@ namespace UmbracoDiscord.Core.Controllers
             scope.Complete();
             return true;
         }
-
-        
     }
 }

@@ -10,7 +10,7 @@
         vm.selectedRole = null;
 
         vm.syncedGroups = [];
-        vm.selectedsyncGroup = null;
+        vm.selectedSyncGroup = null;
 
         vm.groups = [];
         vm.selectedGroup = null;
@@ -70,10 +70,26 @@
             vm.selectedGroup = group;
         }
 
+        vm.selectSyncedGroup = function(group) {
+            vm.selectedSyncGroup = group;
+            console.log(vm.selectedSyncGroup);
+        }
+
         vm.addSync = function() {
             $http.post(baseApiUrl + "RegisterRoleToMemberGroup", { guildId: vm.selectedGuild.id, roleId: vm.selectedRole.id, membershipGroupAlias:vm.selectedGroup}).then((response) => {
                 vm.getSyncGroups();
             });
+        }
+
+        vm.removeSync = function (syncRemoval) {
+            $http.post(baseApiUrl + "RemoveMemberGroupFromRole", { id: vm.selectedSyncGroup.id, syncRemoval: syncRemoval }).then((response) => {
+                vm.getSyncGroups();
+            });
+        }
+
+        vm.cancelAddSync = function () {
+            vm.selectedGroup = false;
+            vm.addingNewSync = false;
         }
 
 
@@ -93,7 +109,7 @@
         }
 
         function resetSelectedSync() {
-            vm.selectedsyncGroup = null;
+            vm.selectedSyncGroup = null;
             resetAdding();
         }
 
