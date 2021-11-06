@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +23,7 @@ using UmbracoDiscord.Core.Models.DiscordApi;
 using UmbracoDiscord.Core.Models.DiscordDashboard;
 using UmbracoDiscord.Core.Repositories;
 using UmbracoDiscord.Core.Repositories.Dtos;
+using UmbracoDiscord.Core.Services;
 
 namespace UmbracoDiscord.Core.Controllers
 {
@@ -34,18 +36,21 @@ namespace UmbracoDiscord.Core.Controllers
         private readonly DiscordRoleRepository _discordRoleRepository;
         private readonly IScopeProvider _scopeProvider;
         private readonly IMemberGroupService _memberGroupService;
+        private readonly IDiscordAuthService _discordAuthService;
 
         public DiscordAdminController(IConfiguration configuration, 
             IBackOfficeSecurityAccessor backOfficeSecurityAccessor,
             DiscordRoleRepository discordRoleRepository,
             IScopeProvider scopeProvider,
-            IMemberGroupService memberGroupService)
+            IMemberGroupService memberGroupService,
+            IDiscordAuthService discordAuthService)
         {
             _configuration = configuration;
             _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
             _discordRoleRepository = discordRoleRepository;
             _scopeProvider = scopeProvider;
             _memberGroupService = memberGroupService;
+            _discordAuthService = discordAuthService;
         }
 
         public async Task<IActionResult> Guilds()
@@ -56,9 +61,8 @@ namespace UmbracoDiscord.Core.Controllers
                 return Unauthorized();
             }
 
-            var availbableGuilds = await Constants.DiscordApi.GuildEndpoint.WithHeader("Authorization", "Bot " + _configuration["Discord:Token"])
-                .GetAsync().ReceiveJson<List<GuildResult>>().ConfigureAwait(false);
-            return Ok(availbableGuilds.Select(g => new DiscordGuildInfo { Id = g.Id.ToString(), Name = g.Name }).ToList());
+            var availableGuilds = await _discordAuthService.GetAvailableGuilds();
+            return Ok(availableGuilds.Select(g => new DiscordGuildInfo { Id = g.Id.ToString(CultureInfo.InvariantCulture), Name = g.Name }).ToList());
         }
 
         public async Task<IActionResult> Roles(ulong guildId)
@@ -69,10 +73,9 @@ namespace UmbracoDiscord.Core.Controllers
                 return Unauthorized();
             }
 
-            var roles = await string.Format(Constants.DiscordApi.GuildRolesEndpoint,guildId).WithHeader("Authorization", "Bot " + _configuration["Discord:Token"])
-                .GetAsync().ReceiveJson<List<GuildResult>>().ConfigureAwait(false);
+            var roles = await _discordAuthService.GetAvailableRolesForGuild(guildId);
 
-            return Ok(roles.Select(r => new DiscordRoleInfo() {Id = r.Id.ToString(), Name = r.Name}));
+            return Ok(roles.Select(r => new DiscordRoleInfo() {Id = r.Id.ToString(CultureInfo.InvariantCulture), Name = r.Name}));
         }
 
         public IEnumerable<SyncedDiscordRole> Syncs(ulong guildId, ulong roleId)

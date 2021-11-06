@@ -1,20 +1,17 @@
-﻿using System;
+﻿using Flurl.Http;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Serilog.Core;
-using Flurl.Http;
-using Microsoft.Extensions.Configuration;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Scoping;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Web.Common.PublishedModels;
-using Umbraco.Cms.Web.Common.Security;
 using Umbraco.Extensions;
 using UmbracoDiscord.Core.Models.DiscordApi;
 using UmbracoDiscord.Core.Repositories;
@@ -124,6 +121,18 @@ namespace UmbracoDiscord.Core.Services
 
         }
 
+        public async Task<List<GuildResult>> GetAvailableGuilds()
+        {
+            return await Constants.DiscordApi.GuildEndpoint.WithHeader("Authorization", "Bot " + _configuration["Discord:Token"])
+                .GetAsync().ReceiveJson<List<GuildResult>>().ConfigureAwait(false);
+        }
+
+        public async Task<List<GuildResult>> GetAvailableRolesForGuild(ulong guildId)
+        {
+            return await string.Format(Constants.DiscordApi.GuildRolesEndpoint, guildId).WithHeader("Authorization", "Bot " + _configuration["Discord:Token"])
+                .GetAsync().ReceiveJson<List<GuildResult>>().ConfigureAwait(false);
+        }
+
         private async Task<BearerTokenResult> ExchangeRedirectCode(string code, DiscordSection settings)
         {
             return await Constants.DiscordApi.TokenEndpoint.PostUrlEncodedAsync(new
@@ -167,12 +176,15 @@ namespace UmbracoDiscord.Core.Services
         {
             using var scope = _scopeProvider.CreateScope(autoComplete: true);
 
+            var availableGuilds = await GetAvailableGuilds();
+
             var syncRules = _discordRoleRepository.GetAll();
-            // we are not in the guild of the rule OR the rule has been marked as syncRemove
-            var groupsToRemove = syncRules.Where(r => guilds.Any(g => g.Id == r.GuildId) == false || r.SyncRemoval)
+            // we are not in the guild of the rule OR we no longer have access to the guild OR the rule has been marked as syncRemove
+            var groupsToRemove = syncRules.Where(r => guilds.Any(g => g.Id == r.GuildId) == false || availableGuilds.Any(g => g.Id == r.GuildId) || r.SyncRemoval)
                 .Select(r => r.MembershipGroupAlias).Distinct().ToList();
-            
-            var activeGuilds = syncRules.Where(r => r.SyncRemoval == false).Select(r => r.GuildId).Distinct();
+
+            // we need to filter out unavailable guilds else fetching the members in 
+            var activeGuilds = syncRules.Where(r => r.SyncRemoval == false && availableGuilds.Any(g => g.Id == r.GuildId)).Select(r => r.GuildId).Distinct();
 
             var groupsToAdd = new List<string>();
             foreach (var guildId in activeGuilds)

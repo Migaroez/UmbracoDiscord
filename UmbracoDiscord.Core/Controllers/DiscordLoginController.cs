@@ -13,6 +13,7 @@ using Umbraco.Cms.Core.Web;
 using Umbraco.Cms.Web.Common.Controllers;
 using Umbraco.Cms.Web.Common.PublishedModels;
 using Umbraco.Extensions;
+using UmbracoDiscord.Core.Constants;
 using UmbracoDiscord.Core.Services;
 
 namespace UmbracoDiscord.Core.Controllers
@@ -50,7 +51,7 @@ namespace UmbracoDiscord.Core.Controllers
 
 
             return Redirect(
-                $"https://discord.com/api/oauth2/authorize?response_type=code&client_id={settings.ClientId}&scope=identify%20email%20guilds&state={state}&redirect_uri={redirectPage.Url(mode:UrlMode.Absolute)}&prompt=none");
+                $"{DiscordApi.AuthorizeEndpoint}?response_type=code&client_id={settings.ClientId}&scope=identify%20email%20guilds&state={state}&redirect_uri={redirectPage.Url(mode:UrlMode.Absolute)}&prompt=none");
         }
     }
 }
