@@ -71,7 +71,6 @@ angular.module("umbraco")
 
         vm.selectSyncedGroup = function(group) {
             vm.selectedSyncGroup = group;
-            console.log(vm.selectedSyncGroup);
         }
 
         /* Public actions */

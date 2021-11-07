@@ -100,7 +100,7 @@ namespace UmbracoDiscord.Core.Services
             }
 
             // get guilds and check they are still a member of the guild specified
-            var guildResult = await GetGuilds(bearerTokenResult.AccessToken);
+            var guildResult = await GetUserGuilds(bearerTokenResult.AccessToken);
 
             // if userId exists update them
             var existingMember = _memberService.GetByEmail(userResult.Email);
@@ -123,6 +123,20 @@ namespace UmbracoDiscord.Core.Services
             return Attempt<string>.Succeed(userResult.Email);
         }
 
+        private async Task<BearerTokenResult> ExchangeRedirectCode(string code, DiscordSection settings)
+        {
+            return await Constants.DiscordApi.TokenEndpoint.PostUrlEncodedAsync(new
+            {
+                client_id = _configuration["Discord:ClientId"],
+                client_secret = _configuration["Discord:ClientSecret"],
+                grant_type = "authorization_code",
+                code = code,
+                redirect_uri = settings.FirstChild<DiscordLoginRedirectHandler>().Url(mode: UrlMode.Absolute)
+            }).ReceiveJson<BearerTokenResult>().ConfigureAwait(false);
+        }
+        #endregion
+
+
         public async Task<List<GuildResult>> GetAvailableGuilds()
         {
             return await Constants.DiscordApi.GuildEndpoint.WithHeader("Authorization", "Bot " + _configuration["Discord:BotToken"])
@@ -135,25 +149,13 @@ namespace UmbracoDiscord.Core.Services
                 .GetAsync().ReceiveJson<List<GuildResult>>().ConfigureAwait(false);
         }
 
-        private async Task<BearerTokenResult> ExchangeRedirectCode(string code, DiscordSection settings)
-        {
-            return await Constants.DiscordApi.TokenEndpoint.PostUrlEncodedAsync(new
-            {
-                client_id = _configuration["Discord:ClientId"],
-                client_secret = _configuration["Discord:ClientSecret"],
-                grant_type = "authorization_code",
-                code = code,
-                redirect_uri = settings.FirstChild<DiscordLoginRedirectHandler>().Url(mode: UrlMode.Absolute)
-            }).ReceiveJson<BearerTokenResult>().ConfigureAwait(false);
-        }
-
         private async Task<UserResult> GetUser(string accessToken)
         {
             return await Constants.DiscordApi.UserEndpoint.WithOAuthBearerToken(accessToken)
                 .GetAsync().ReceiveJson<UserResult>().ConfigureAwait(false);
         }
 
-        private async Task<List<GuildResult>> GetGuilds(string accessToken)
+        private async Task<List<GuildResult>> GetUserGuilds(string accessToken)
         {
             return await Constants.DiscordApi.GuildEndpoint.
                 WithOAuthBearerToken(accessToken)
@@ -267,6 +269,5 @@ namespace UmbracoDiscord.Core.Services
 
             return guilds.Any(g => requiredGuildIds.Any(gi => gi == g.Id));
         }
-        #endregion
     }
 }
