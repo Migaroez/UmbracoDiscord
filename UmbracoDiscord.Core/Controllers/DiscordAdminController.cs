@@ -36,17 +36,17 @@ namespace UmbracoDiscord.Core.Controllers
             _discordAuthService = discordAuthService;
         }
 
-        public async Task<IActionResult> Guilds()
+        public async Task<IEnumerable<DiscordGuildInfo>> Guilds()
         {
             var availableGuilds = await _discordAuthService.GetAvailableGuilds();
-            return Ok(availableGuilds.Select(g => new DiscordGuildInfo { Id = g.Id.ToString(CultureInfo.InvariantCulture), Name = g.Name }).ToList());
+            return availableGuilds.Select(g => new DiscordGuildInfo { Id = g.Id.ToString(CultureInfo.InvariantCulture), Name = g.Name });
         }
 
-        public async Task<IActionResult> Roles(ulong guildId)
+        public async Task<IEnumerable<DiscordRoleInfo>> Roles(ulong guildId)
         {
             var roles = await _discordAuthService.GetAvailableRolesForGuild(guildId);
 
-            return Ok(roles.Select(r => new DiscordRoleInfo() {Id = r.Id.ToString(CultureInfo.InvariantCulture), Name = r.Name}));
+            return roles.Select(r => new DiscordRoleInfo() {Id = r.Id.ToString(CultureInfo.InvariantCulture), Name = r.Name});
         }
 
         public IEnumerable<SyncedDiscordRole> Syncs(ulong guildId, ulong roleId)
