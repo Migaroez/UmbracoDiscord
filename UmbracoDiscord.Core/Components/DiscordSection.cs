@@ -1,20 +1,26 @@
-﻿using Umbraco.Cms.Core.Composing;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Cms.Core.Composing;
+using Umbraco.Cms.Core.Dashboards;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Sections;
+using Umbraco.Cms.Core.WebAssets;
+using Umbraco.Cms.Web.BackOffice.Authorization;
+using Umbraco.Cms.Web.Common.Authorization;
 
 namespace UmbracoDiscord.Core.Components
 {
     public class DiscordSection : ISection
     {
-        public string Alias => "discordSection";
+        public string Alias => Constants.Backoffice.DiscordSection;
         public string Name => "Discord";
     }
 
     public class DiscordDashboard : IDashboard
     {
-        public string Alias => "discordDashboard";
+        public string Alias => Constants.Backoffice.DiscordDashboard;
         public string View => "/App_Plugins/Discord/Dashboard.html";
-        public string[] Sections => new[] { "discordsection" };
+        public string[] Sections => new[] { Constants.Backoffice.DiscordSection };
 
         public IAccessRule[] AccessRules => new IAccessRule[]
         {
@@ -35,6 +41,16 @@ namespace UmbracoDiscord.Core.Components
         {
             builder.Sections().Append<DiscordSection>();
             builder.BackOfficeAssets().Append<CustomPackageScript>();
+            builder.Services.AddAuthorization(o => AddSecurityPolicies(o, Umbraco.Cms.Core.Constants.Security.BackOfficeAuthenticationType));
+        }
+
+        private void AddSecurityPolicies(AuthorizationOptions options, string backOfficeAuthenticationScheme)
+        {
+            options.AddPolicy(Constants.Backoffice.DiscordSectionAccessPolicy, policy =>
+            {
+                policy.AuthenticationSchemes.Add(backOfficeAuthenticationScheme);
+                policy.Requirements.Add(new SectionRequirement(Constants.Backoffice.DiscordSection));
+            });
         }
     }
 }

@@ -4,12 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Umbraco.Cms.Core.Scoping;
-using Umbraco.Cms.Core.Security;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Web.Common.Attributes;
-using Umbraco.Cms.Web.Common.Authorization;
 using Umbraco.Cms.Web.Common.Controllers;
 using UmbracoDiscord.Core.Controllers.SubmitModels;
 using UmbracoDiscord.Core.Models.DiscordDashboard;
@@ -20,25 +17,19 @@ using UmbracoDiscord.Core.Services;
 namespace UmbracoDiscord.Core.Controllers
 {
     [IsBackOffice]
-    [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+    [Authorize(Policy = Constants.Backoffice.DiscordSectionAccessPolicy)]
     public class DiscordAdminController : UmbracoApiController
     {
-        private readonly IConfiguration _configuration;
-        private readonly IBackOfficeSecurityAccessor _backOfficeSecurityAccessor;
         private readonly DiscordRoleRepository _discordRoleRepository;
         private readonly IScopeProvider _scopeProvider;
         private readonly IMemberGroupService _memberGroupService;
         private readonly IDiscordAuthService _discordAuthService;
 
-        public DiscordAdminController(IConfiguration configuration, 
-            IBackOfficeSecurityAccessor backOfficeSecurityAccessor,
-            DiscordRoleRepository discordRoleRepository,
+        public DiscordAdminController(DiscordRoleRepository discordRoleRepository,
             IScopeProvider scopeProvider,
             IMemberGroupService memberGroupService,
             IDiscordAuthService discordAuthService)
         {
-            _configuration = configuration;
-            _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
             _discordRoleRepository = discordRoleRepository;
             _scopeProvider = scopeProvider;
             _memberGroupService = memberGroupService;
@@ -47,24 +38,12 @@ namespace UmbracoDiscord.Core.Controllers
 
         public async Task<IActionResult> Guilds()
         {
-            if (_backOfficeSecurityAccessor.BackOfficeSecurity.UserHasSectionAccess("discordSection",
-                _backOfficeSecurityAccessor.BackOfficeSecurity.CurrentUser) == false)
-            {
-                return Unauthorized();
-            }
-
             var availableGuilds = await _discordAuthService.GetAvailableGuilds();
             return Ok(availableGuilds.Select(g => new DiscordGuildInfo { Id = g.Id.ToString(CultureInfo.InvariantCulture), Name = g.Name }).ToList());
         }
 
         public async Task<IActionResult> Roles(ulong guildId)
         {
-            if (_backOfficeSecurityAccessor.BackOfficeSecurity.UserHasSectionAccess("discordSection",
-                _backOfficeSecurityAccessor.BackOfficeSecurity.CurrentUser) == false)
-            {
-                return Unauthorized();
-            }
-
             var roles = await _discordAuthService.GetAvailableRolesForGuild(guildId);
 
             return Ok(roles.Select(r => new DiscordRoleInfo() {Id = r.Id.ToString(CultureInfo.InvariantCulture), Name = r.Name}));

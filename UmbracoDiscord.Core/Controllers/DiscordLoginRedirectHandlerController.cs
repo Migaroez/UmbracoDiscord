@@ -14,12 +14,12 @@ namespace UmbracoDiscord.Core.Controllers
     public class DiscordLoginRedirectHandlerController : RenderController
     {
         private readonly ILogger<DiscordLoginRedirectHandlerController> _logger;
-        private readonly IDiscordAuthService _discordAuthService;
+        private readonly IDiscordService _discordAuthService;
         private readonly IMemberManager _memberManager;
         private readonly IMemberSignInManager _memberSignInManager;
 
         public DiscordLoginRedirectHandlerController(ILogger<DiscordLoginRedirectHandlerController> logger, ICompositeViewEngine compositeViewEngine, IUmbracoContextAccessor umbracoContextAccessor,
-            IDiscordAuthService discordAuthService,
+            IDiscordService discordAuthService,
             IMemberManager memberManager,
             IMemberSignInManager memberSignInManager) : base(logger, compositeViewEngine, umbracoContextAccessor)
         {

@@ -8,7 +8,7 @@ using UmbracoDiscord.Core.Models.DiscordApi;
 
 namespace UmbracoDiscord.Core.Services
 {
-    public interface IDiscordAuthService
+    public interface IDiscordService
     {
         Guid? GetState(HttpContext httpContext, bool renew);
         bool IsValidState(HttpContext httpContext);

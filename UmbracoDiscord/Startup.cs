@@ -48,7 +48,7 @@ namespace UmbracoDiscord
                 .Build();
 #pragma warning restore IDE0022 // Use expression body for methods
 
-            services.AddScoped<IDiscordAuthService, DiscordAuthService>();
+            services.AddScoped<IDiscordService, DiscordService>();
 
         }
 

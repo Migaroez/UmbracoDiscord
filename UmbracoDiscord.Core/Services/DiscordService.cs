@@ -24,16 +24,16 @@ using UmbracoDiscord.Core.Services.Exceptions;
 
 namespace UmbracoDiscord.Core.Services
 {
-    public class DiscordAuthService : IDiscordAuthService
+    public class DiscordService : IDiscordService
     {
-        private readonly ILogger<DiscordAuthService> _logger;
+        private readonly ILogger<DiscordService> _logger;
         private readonly IMemberService _memberService;
         private readonly DiscordRoleRepository _discordRoleRepository;
         private readonly IConfiguration _configuration;
         private readonly IScopeProvider _scopeProvider;
         private static Dictionary<string, Guid> _stateTracker = new(); // todo change this to a repository so it survives app recycles
 
-        public DiscordAuthService(ILogger<DiscordAuthService> logger,
+        public DiscordService(ILogger<DiscordService> logger,
             IMemberService memberService,
             DiscordRoleRepository discordRoleRepository,
             IConfiguration configuration,

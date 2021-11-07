@@ -14,11 +14,11 @@ namespace UmbracoDiscord.Core.Controllers
 {
     public class DiscordLoginController : RenderController
     {
-        private readonly IDiscordAuthService _discordAuthService;
+        private readonly IDiscordService _discordAuthService;
         private readonly IConfiguration _configuration;
 
         public DiscordLoginController(ILogger<DiscordLoginController> logger, ICompositeViewEngine compositeViewEngine, IUmbracoContextAccessor umbracoContextAccessor,
-            IDiscordAuthService discordAuthService, IConfiguration configuration) : base(logger, compositeViewEngine, umbracoContextAccessor)
+            IDiscordService discordAuthService, IConfiguration configuration) : base(logger, compositeViewEngine, umbracoContextAccessor)
         {
             _discordAuthService = discordAuthService;
             _configuration = configuration;
