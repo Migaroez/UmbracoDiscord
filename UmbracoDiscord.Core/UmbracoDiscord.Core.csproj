@@ -6,7 +6,8 @@
 
   <ItemGroup>
     <PackageReference Include="Flurl.Http" Version="3.2.0" />
-    <PackageReference Include="Umbraco.Cms.Web.Common" Version="9.0.0-rc003" />
+    <PackageReference Include="Umbraco.Cms.Web.BackOffice" Version="9.0.1" />
+    <PackageReference Include="Umbraco.Cms.Web.Common" Version="9.0.1" />
   </ItemGroup>
 
 </Project>
