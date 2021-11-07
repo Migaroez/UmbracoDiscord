@@ -68,7 +68,7 @@ namespace UmbracoDiscord.Core.Controllers
             using var scope = _scopeProvider.CreateScope();
 
             // this is not optimal, but we don't expect to get enough items for this to be an issue
-            var existingItems = _discordRoleRepository.GetAll().Where(i => i.GuildId == model.GuildId && i.RoleId == model.RoleId).ToList();
+            var existingItems = _discordRoleRepository.GetAll().Where(i => i.GuildId == model.GuildId && i.RoleId == model.RoleId && i.MembershipGroupAlias == model.MembershipGroupAlias).ToList();
             if (!existingItems.Any())
             {
                 var item = AddItem(model.GuildId, model.RoleId, model.MembershipGroupAlias);
