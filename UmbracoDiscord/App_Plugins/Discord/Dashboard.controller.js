@@ -1,4 +1,6 @@
-﻿angular.module("umbraco")
+﻿//todo: handled error respones from $http calls
+
+angular.module("umbraco")
     .controller("Discord.Dashboard", function ($scope, $http) {
 
         /* Data definitions */
@@ -95,9 +97,6 @@
                 vm.getSyncGroups();
             });
         }
-
-        
-
 
         //private functions
         function resetSelectedGuild() {

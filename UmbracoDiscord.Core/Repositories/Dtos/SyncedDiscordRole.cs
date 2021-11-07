@@ -23,6 +23,5 @@ namespace UmbracoDiscord.Core.Repositories.Dtos
 
         [Column("SyncRemoval")]
         public bool SyncRemoval { get; set; }
-
     }
 }
