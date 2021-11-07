@@ -23,12 +23,12 @@ namespace UmbracoDiscord.Core.Controllers
         private readonly DiscordRoleRepository _discordRoleRepository;
         private readonly IScopeProvider _scopeProvider;
         private readonly IMemberGroupService _memberGroupService;
-        private readonly IDiscordAuthService _discordAuthService;
+        private readonly IDiscordService _discordAuthService;
 
         public DiscordAdminController(DiscordRoleRepository discordRoleRepository,
             IScopeProvider scopeProvider,
             IMemberGroupService memberGroupService,
-            IDiscordAuthService discordAuthService)
+            IDiscordService discordAuthService)
         {
             _discordRoleRepository = discordRoleRepository;
             _scopeProvider = scopeProvider;
@@ -76,27 +76,7 @@ namespace UmbracoDiscord.Core.Controllers
                 return item;
             }
 
-            var activeItem = existingItems.FirstOrDefault(i => i.SyncRemoval == false);
-            if (activeItem == null)
-            {
-                var item = AddItem(model.GuildId, model.RoleId, model.MembershipGroupAlias);
-                scope.Complete();
-                return item;
-            }
-
-            if (model.SyncRemoval)
-            {
-                activeItem.SyncRemoval = true;
-                _discordRoleRepository.Save(activeItem);
-            }
-            else
-            {
-                _discordRoleRepository.Delete(activeItem.Id);
-            }
-
-            var newItem = AddItem(model.GuildId, model.RoleId, model.MembershipGroupAlias);
-            scope.Complete();
-            return newItem;
+            return existingItems.First().Id;
         }
 
         private int AddItem(decimal guildId, decimal roleId, string membershipGroupAlias)
