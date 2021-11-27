@@ -1,0 +1,9 @@
+{
+  "javascript": [
+    "~/App_Plugins/uSync/usync.9.0.4.min.js"
+  ],
+  "css": [
+    "~/App_Plugins/uSync/usync.9.0.4.min.css"
+  ],
+  "bundleOptions": "Independent"
+}

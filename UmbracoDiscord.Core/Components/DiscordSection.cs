@@ -35,7 +35,7 @@ namespace UmbracoDiscord.Core.Components
         public CustomPackageScript() : base("/App_Plugins/Discord/Dashboard.controller.js") { }
     }
 
-    public class SectionComposer : IComposer
+    public class DiscordSectionComposer : IComposer
     {
         public void Compose(IUmbracoBuilder builder)
         {
