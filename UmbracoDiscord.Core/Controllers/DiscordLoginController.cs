@@ -26,7 +26,6 @@ namespace UmbracoDiscord.Core.Controllers
 
         public override IActionResult Index()
         { 
-
             var settings = (CurrentPage as DiscordLogin).Ancestor<DiscordSection>();
             if (settings == null)
             {
@@ -44,7 +43,6 @@ namespace UmbracoDiscord.Core.Controllers
                 return base.Index();
             }
             var redirectPage = settings.FirstChild<DiscordLoginRedirectHandler>();
-
 
             return Redirect(
                 $"{DiscordApi.AuthorizeEndpoint}?response_type=code&client_id={_configuration["Discord:ClientId"]}&scope=identify%20email%20guilds&state={state}&redirect_uri={redirectPage.Url(mode:UrlMode.Absolute)}&prompt=none");

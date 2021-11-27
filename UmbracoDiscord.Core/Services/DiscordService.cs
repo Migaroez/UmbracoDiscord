@@ -115,7 +115,7 @@ namespace UmbracoDiscord.Core.Services
             }
 
             // if no member exists create them
-            var newMemberResult = CreateMember(userResult, guildResult, settings);
+            var newMemberResult = await CreateMember(userResult, guildResult, settings);
             if (newMemberResult.Success == false)
             {
                 return Attempt<string>.Fail(newMemberResult.Exception);
@@ -227,10 +227,9 @@ namespace UmbracoDiscord.Core.Services
             {
                 _memberService.AssignRoles(new[]{member.Id},groupsToAdd.ToArray());
             }
-
         }
 
-        private Attempt<bool> CreateMember(UserResult userResult, List<GuildResult> guilds, DiscordSection settings)
+        private async Task<Attempt<bool>> CreateMember(UserResult userResult, List<GuildResult> guilds, DiscordSection settings)
         {
             if (RequiredGuildsValidated(userResult, guilds, settings) == false)
             {
@@ -241,6 +240,7 @@ namespace UmbracoDiscord.Core.Services
             UpdateUserDetails(newMember, userResult);
 
             _memberService.Save(newMember);
+            await SyncMemberGroups(newMember, userResult, guilds);
             return Attempt<bool>.Succeed();
         }
 
